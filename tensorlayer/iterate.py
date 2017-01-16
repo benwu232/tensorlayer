@@ -48,6 +48,48 @@ def minibatches(inputs=None, targets=None, batch_size=None, shuffle=False):
             excerpt = slice(start_idx, start_idx + batch_size)
         yield inputs[excerpt], targets[excerpt]
 
+def minibatches_w(inputs=None, targets=None, weights=None, batch_size=None, shuffle=False):
+    """Generate a generator that input a group of example in numpy.array and
+    their labels, return the examples and labels by the given batchsize.
+
+    Parameters
+    ----------
+    inputs : numpy.array
+        (X) The input features, every row is a example.
+    targets : numpy.array
+        (y) The labels of inputs, every row is a example.
+    batch_size : int
+        The batch size.
+    shuffle : boolean
+        Indicating whether to use a shuffling queue, shuffle the dataset before return.
+
+    Examples
+    --------
+    >>> X = np.asarray([['a','a'], ['b','b'], ['c','c'], ['d','d'], ['e','e'], ['f','f']])
+    >>> y = np.asarray([0,1,2,3,4,5])
+    >>> for batch in tl.iterate.minibatches(inputs=X, targets=y, batch_size=2, shuffle=False):
+    >>>     print(batch)
+    ... (array([['a', 'a'],
+    ...        ['b', 'b']],
+    ...         dtype='<U1'), array([0, 1]))
+    ... (array([['c', 'c'],
+    ...        ['d', 'd']],
+    ...         dtype='<U1'), array([2, 3]))
+    ... (array([['e', 'e'],
+    ...        ['f', 'f']],
+    ...         dtype='<U1'), array([4, 5]))
+    """
+    assert len(inputs) == len(targets)
+    if shuffle:
+        indices = np.arange(len(inputs))
+        np.random.shuffle(indices)
+    for start_idx in range(0, len(inputs) - batch_size + 1, batch_size):
+        if shuffle:
+            excerpt = indices[start_idx:start_idx + batch_size]
+        else:
+            excerpt = slice(start_idx, start_idx + batch_size)
+        yield inputs[excerpt], targets[excerpt], weights[excerpt]
+
 def seq_minibatches(inputs, targets, batch_size, seq_length, stride=1):
     """Generate a generator that return a batch of sequence inputs and targets.
     If ``batch_size = 100, seq_length = 5``, one return will have ``500`` rows (examples).
